@@ -39,6 +39,11 @@ module.exports = {
   // (you will need to restart the `yarn run start` dev server after editing the .env)
 
   networks: {
+    hardhat: {
+      accounts: {
+        mnemonic: mnemonic(),
+      },
+    },
     localhost: {
       url: "http://localhost:8545",
       /*
@@ -79,7 +84,7 @@ module.exports = {
     },
   },
   solidity: {
-    version: "0.6.7",
+    version: "0.6.12",
     settings: {
       optimizer: {
         enabled: true,

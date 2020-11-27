@@ -50,11 +50,20 @@ export default function Contract({ account, gasPrice, signer, provider, name, sh
     [contract, show],
   );
 
-  const [refreshRequired, triggerRefresh] = useState(false)
+  const [refreshRequired, triggerRefresh] = useState(false);
+
   const contractDisplay = displayedContractFunctions.map(fn => {
     if (isQueryable(fn)) {
       // If there are no inputs, just display return value
-      return <DisplayVariable key={fn.name} contractFunction={contract[fn.name]} functionInfo={fn} refreshRequired={refreshRequired} triggerRefresh={triggerRefresh}/>;
+      return (
+        <DisplayVariable
+          key={fn.name}
+          contractFunction={contract[fn.name]}
+          functionInfo={fn}
+          refreshRequired={refreshRequired}
+          triggerRefresh={triggerRefresh}
+        />
+      );
     }
     // If there are inputs, display a form to allow users to provide these
     return (
