@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL
 pragma solidity 0.6.12;
 
-interface ISimpleBond {
+interface ISprouts {
 
-  event MintedBond(address buyer, uint256 bondsAmount);
+  event BondsIssued(address buyer, uint256 bondsAmount);
 
   event RedeemedCoupons(address indexed caller, uint256[] bonds);
 
