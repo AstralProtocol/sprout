@@ -14,7 +14,7 @@ interface ISprouts {
 
   function changeLoopLimit(uint256 _loopLimit) external;
 
-  function mintBond(address buyer, uint256 bondsAmount) external;
+  function issueBond(address buyer, uint256 bondsAmount) external;
 
   function redeemCoupons(uint256[] memory _bonds ) external;
 

@@ -1,1 +1,1 @@
-module.exports = ["SmartGreenBond"];
+module.exports = ["Germination"];

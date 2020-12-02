@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import '@openzeppelin/upgrades/contracts/Initializable.sol';
+import '@openzeppelin/contracts/proxy/Initializable.sol';
 import "./interfaces/ISprout.sol";
 
 contract Sprout is ISprouts, Ownable, Initializable {
@@ -37,12 +37,12 @@ contract Sprout is ISprouts, Ownable, Initializable {
 
     /**
     * @dev  Logic contract that proxies point to
-    * @param _par
-    * @param _parDecimals
-    * @param _coupon
-    * @param _term
-    * @param _cap
-    * @param _timesToRedeem
+    * @param _par Par value
+    * @param _parDecimals Par decimals
+    * @param _coupon Coupon
+    * @param _term Term
+    * @param _cap Cap
+    * @param _timesToRedeem Times to redeem
     * @param _loopLimit (To limit the for cycle when issuing the bonds)
      */
     function initialize(        
@@ -64,7 +64,6 @@ contract Sprout is ISprouts, Ownable, Initializable {
         require(_term > 0, "Term lower than or equal 0");
         require(_loopLimit > 0, "Loop limit lower than or equal 0");
         require(_timesToRedeem > 0, "Times to redeem lower or equal to 0");
-        Ownable.initialize(_owner);
 
         name = _name;
         parValue = _par;

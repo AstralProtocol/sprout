@@ -163,12 +163,12 @@ function App(props) {
                 and give you a form to interact with it locally
             */}
             <Contract
-              name="SmartGreenBond"
+              name="Germination"
               signer={userProvider.getSigner()}
               provider={localProvider}
               address={address}
               blockExplorer={blockExplorer}
-              show={["mintBond", "updateTotalOwed"]}
+              show={["deploySproutContract"]}
             />
           </Route>
           <Route path="/hints">

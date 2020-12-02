@@ -12,12 +12,12 @@ const main = async () => {
   // ! AUTO DEPLOY
   // * -----------
   // to read contract directory and deploy them all (add ".args" files for arguments)
-  await autoDeploy();
+  // await autoDeploy();
 
   // ! OR CUSTOM DEPLOY
   // * ----------------
   // custom deploy (to use deployed addresses dynamically for example:)
-  // const exampleToken = await deploy("ExampleToken")
+  const germination = await deploy("Germination")
   // const examplePriceOracle = await deploy("ExamplePriceOracle")
   // const smartContractWallet = await deploy("SmartContractWallet",[exampleToken.address,examplePriceOracle.address])
 

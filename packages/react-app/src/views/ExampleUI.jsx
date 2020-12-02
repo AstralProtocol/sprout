@@ -19,11 +19,11 @@ export default function ExampleUI({
   const [newPurpose, setNewPurpose] = useState("loading...");
 
   // keep track of a variable from the contract in the local React state:
-  const purpose = useContractReader(readContracts, "SmartGreenBond", "mintBond");
+  const purpose = useContractReader(readContracts, "Germination", "mintBond");
   console.log("🤗 purpose:", purpose);
 
   //📟 Listen for broadcast events
-  const setPurposeEvents = useEventListener(readContracts, "SmartGreenBond", "TotalOwedUpdated", localProvider, 1);
+  const setPurposeEvents = useEventListener(readContracts, "Germination", "SproutCreated", localProvider, 1);
   console.log("📟 SetPurpose events:", setPurposeEvents);
 
   /*
@@ -77,7 +77,7 @@ export default function ExampleUI({
         <Divider />
         Your Contract Address:
         <Address
-          value={readContracts ? readContracts.SmartGreenBond.address : readContracts}
+          value={readContracts ? readContracts.Germination.address : readContracts}
           ensProvider={mainnetProvider}
           fontSize={16}
         />
