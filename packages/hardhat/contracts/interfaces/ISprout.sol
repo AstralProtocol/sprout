@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL
+// SPDX-License-Identifier: APACHE OR MIT
 pragma solidity 0.6.12;
 
 interface ISprouts {

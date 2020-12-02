@@ -58,12 +58,7 @@ contract Sprout is ISprouts, Ownable, Initializable {
         address _owner
         // address _oracle
         ) public {
-        require(bytes(_name).length > 0, "Empty name provided");
-        require(_coupon > 0, "Coupon rate lower than or equal 0 ");
-        require(_par > 0, "Par lower than or equal 0");
-        require(_term > 0, "Term lower than or equal 0");
-        require(_loopLimit > 0, "Loop limit lower than or equal 0");
-        require(_timesToRedeem > 0, "Times to redeem lower or equal to 0");
+
 
         name = _name;
         parValue = _par;
