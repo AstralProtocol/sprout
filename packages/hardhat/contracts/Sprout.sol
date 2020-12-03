@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: GPL
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import '@openzeppelin/contracts/proxy/Initializable.sol';
+import './interfaces/IWSImplementation.sol';
 import "./interfaces/ISprout.sol";
 
-contract Sprout is ISprouts, Ownable, Initializable {
+contract Sprout is ISprouts, IWSImplementation {
     using SafeMath for uint256;
 
+    // Proxy storage and control
+    address public override spatialRegistry;
+    address public override factory;
+    bool private initialized;
+    uint private unlocked;
+
+    // Bond storage
     string name;
     uint256 totalDebt; // running tally of total owed to investors?
     uint256 totalOwed; // by the borrower to service the bond each interval -> coupons + variable payment.
@@ -32,7 +38,20 @@ contract Sprout is ISprouts, Ownable, Initializable {
 
     uint256[] noxHistory;
 
+    // Events
     event TotalOwedUpdated(uint256 totalOwed);
+
+    // Modifiers
+    modifier lock() {
+        require(unlocked == 1, 'Sprout: LOCKED');
+        unlocked = 0;
+        _;
+        unlocked = 1;
+    }
+
+    function isLocked() external view override returns (uint){
+        return unlocked;
+    }
 
 
     /**
@@ -45,7 +64,8 @@ contract Sprout is ISprouts, Ownable, Initializable {
     * @param _timesToRedeem Times to redeem
     * @param _loopLimit (To limit the for cycle when issuing the bonds)
      */
-    function initialize(        
+    function initialize(    
+        address _factory,    
         string memory _name,
         uint256 _par,
         uint256 _parDecimals,
@@ -55,21 +75,28 @@ contract Sprout is ISprouts, Ownable, Initializable {
         uint256 _timesToRedeem,
         uint256 _loopLimit,
         address _spatialRegistry,
-        address _owner
         // address _oracle
-        ) public {
+        )  override external returns(bool) {
+        require(initialized == false, 'Sprout: FORBIDDEN');
 
-
+        factory = _factory;
         name = _name;
         parValue = _par;
-        cap = _cap;
-        loopLimit = _loopLimit;
         parDecimals = _parDecimals;
-        timesToRedeem = _timesToRedeem;
         couponRate = _coupon;
         term = _term;
+        cap = _cap;
+        timesToRedeem = _timesToRedeem;
+        loopLimit = _loopLimit;
+        spatialRegistry = _spatialRegistry;
+
         couponThreshold = term.div(timesToRedeem);
         // oracle = _oracle;
+
+        initialized = true;
+        unlocked = 1;
+        super.initialize();
+        return true;
     }
 
 
@@ -78,7 +105,7 @@ contract Sprout is ISprouts, Ownable, Initializable {
      * @param _loopLimit The new loop limit
      */
 
-    function changeLoopLimit(uint256 _loopLimit) public override onlyOwner {
+    function changeLoopLimit(uint256 _loopLimit) external override lock {
         require(_loopLimit > 0, "Loop limit lower than or equal to 0");
 
         loopLimit = _loopLimit;
@@ -91,9 +118,9 @@ contract Sprout is ISprouts, Ownable, Initializable {
      */
     // Add payable function ()
     function issueBond(address buyer, uint256 _bondsAmount)
-        public
+        external
         override
-        onlyOwner
+        lock
     {
         require(buyer != address(0), "Buyer can't be address null");
         require(
@@ -138,7 +165,7 @@ contract Sprout is ISprouts, Ownable, Initializable {
      * @param _bonds An array of bond ids corresponding to the bonds you want to redeem apon
      */
     // maybe add onlyOwner and automate off-chain
-    function redeemCoupons(uint256[] memory _bonds) public override {
+    function redeemCoupons(uint256[] memory _bonds) external override lock {
         require(_bonds.length > 0, "Array of bonds must not be empty");
         require(
             _bonds.length <= loopLimit,
@@ -205,8 +232,9 @@ contract Sprout is ISprouts, Ownable, Initializable {
      */
 
     function transfer(address receiver, uint256[] memory _bonds)
-        public
+        external
         override
+        lock
     {
         require(_bonds.length > 0, "Array of bonds must not be empty");
         require(receiver != address(0), "Receiver can't be address null");
@@ -240,7 +268,7 @@ contract Sprout is ISprouts, Ownable, Initializable {
      *      from the DEFRA NOx data of London
      */
 
-    function updateTotalOwed(uint256 noxMeasurement) public { // called every 1 year by an off-chain oracle EOA
+    function updateTotalOwed(uint256 noxMeasurement) external lock { // called every 1 year by an off-chain oracle EOA
         // example noxMeasurement: 44410000000000000000 i.e. 44.41 ether in wei. i.e. 44.41 * 10e18
 
         // Check to make sure that oracle update is due?
@@ -257,7 +285,7 @@ contract Sprout is ISprouts, Ownable, Initializable {
 
     }
 
-    function payTotalDebt() public payable onlyOwner {
+    function payTotalDebt() external payable lock {
         require(msg.value < totalDebt, "Transaction amount is higher than total owed");
         // add requirement that msg.value is == totalDebt
         totalDebt -= msg.value;
@@ -487,5 +515,10 @@ contract Sprout is ISprouts, Ownable, Initializable {
 
     function getCouponThreshold() public override view returns (uint256) {
         return couponThreshold;
+    }
+
+    function getImplementationType() external pure override returns(uint256) {
+        /// 2 is a sprout type
+        return 2;
     }
 }
