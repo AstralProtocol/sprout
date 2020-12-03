@@ -9,30 +9,30 @@ import "./interfaces/IGreenhouseImplementation.sol";
 import "./Ownable.sol";
 
 contract GreenhouseController is Ownable, IGreenhouseController {
-    address public pairLogic;
+    address public sproutLogic;
     address public currentAdmin;
 
     /*
     * @dev Type variable:
-    * 2 - Pair
+    * 2 - SPROUT_TYPE
     */
-    uint256 constant public PAIR_TYPE = 2;
+    uint256 constant public SPROUT_TYPE = 2;
 
-    event NewPairLogic(address indexed logic);
+    event NewSproutLogic(address indexed logic);
     event NewAdmin(address indexed adminAddress);
     event UpdateProxy(address indexed proxyAddress, address newLogic);
     event ChangeAdmin(address indexed proxyAddress, address newAdmin);
 
-    constructor(address _pairLogic) public {
-        require(_pairLogic != address(0), "WSController: Wrong pair logic address");
+    constructor(address _sproutLogic) public {
+        require(_sproutLogic != address(0), "Greenhouse Controller: Wrong sprout logic address");
         currentAdmin = address(this);
-        pairLogic = _pairLogic;
+        sproutLogic = _sproutLogic;
     }
 
 
-    function updatePairLogic(address _logic) external override onlyOwner {
-        pairLogic = _logic;
-        emit NewPairLogic(_logic);
+    function updateSproutLogic(address _logic) external override onlyOwner {
+        sproutLogic = _logic;
+        emit NewSproutLogic(_logic);
     }
 
     function updateCurrentAdmin(address _newAdmin) external override onlyOwner {
@@ -40,19 +40,19 @@ contract GreenhouseController is Ownable, IGreenhouseController {
         emit NewAdmin(_newAdmin);
     }
 
-    function updateProxyPair(address _proxy) external override {
-        require(IGreenhouseImplementation(IProxy(_proxy).implementation()).getImplementationType() == PAIR_TYPE, "WSController: Wrong pair proxy for update.");
-        IWSProxy(_proxy).upgradeTo(pairLogic);
-        emit UpdateProxy(_proxy, pairLogic);
+    function updateProxySprout(address _proxy) external override {
+        require(IGreenhouseImplementation(IProxy(_proxy).implementation()).getImplementationType() == SPROUT_TYPE, "Greenhouse Controller: Wrong sprout proxy for update.");
+        IProxy(_proxy).upgradeTo(sproutLogic);
+        emit UpdateProxy(_proxy, sproutLogic);
     }
 
     function setAdminForProxy(address _proxy) external override {
-        IWSProxy(_proxy).changeAdmin(currentAdmin);
+        IProxy(_proxy).changeAdmin(currentAdmin);
         emit ChangeAdmin(_proxy, currentAdmin);
     }
 
-    function getLogicForPair() external view override returns(address) {
-        return pairLogic;
+    function getLogicForSprout() external view override returns(address) {
+        return sproutLOgic;
     }
 
     function getCurrentAdmin() external view override returns(address){

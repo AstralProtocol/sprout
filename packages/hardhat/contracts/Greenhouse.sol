@@ -78,7 +78,7 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
             sprout := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
         // Greenhouse as current sprout admin initializes proxy with logic and right admin
-        IProxy(sprout).initialize(IGreenhouseController(controller).getLogicForPair(), IGreenhouseController(controller).getCurrentAdmin(), "");
+        IProxy(sprout).initialize(IGreenhouseController(controller).getLogicForSprout(), IGreenhouseController(controller).getCurrentAdmin(), "");
         // Greehouse initialized sprout with variables
         require(ISprout(sprout).initialize(address(this), _name, _par, _parDecimals, _coupon, _term, _cap, _timesToRedeem, _loopLimit, _spatialRegistry) == true, "Greenhouse: Sprout initialize not succeed.");
         
