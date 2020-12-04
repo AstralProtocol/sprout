@@ -17,7 +17,11 @@ const main = async () => {
   // ! OR CUSTOM DEPLOY
   // * ----------------
   // custom deploy (to use deployed addresses dynamically for example:)
-  const germination = await deploy("Germination")
+  const greenhouseLogic = await deploy("Greenhouse")
+  const sproutLogic = await deploy("Sprout")
+  const greenhouseController = await deploy("GreenhouseController", [sproutLogic.address])
+  const greenhouseProxy = await deploy("GreenhouseProxy", WSProxyFactory, [], {...overrides, gasLimit: 600000}) // used 582,041
+
   // const examplePriceOracle = await deploy("ExamplePriceOracle")
   // const smartContractWallet = await deploy("SmartContractWallet",[exampleToken.address,examplePriceOracle.address])
 

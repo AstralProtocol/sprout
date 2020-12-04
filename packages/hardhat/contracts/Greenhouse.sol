@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: APACHE OR MIT
 pragma solidity ^0.6.12;
 
-import './interfaces/IGreenhouse.sol';
 import './proxy/SproutProxy.sol';
+import './interfaces/IGreenhouse.sol';
 import './interfaces/ISprout.sol';
 import './interfaces/IGreenhouseController.sol';
 import './interfaces/IGreenhouseImplementation.sol';
@@ -43,12 +43,12 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
 
     /**
     * @notice Creates a new sprout
-    * @param _par
-    * @param _parDecimals
-    * @param _coupon
-    * @param _term
-    * @param _cap
-    * @param _timesToRedeem
+    * @param _par Par value - the face value of a bond
+    * @param _parDecimals Par decimals
+    * @param _coupon Coupon = yield paid by a fixed-income security
+    * @param _term Term - bonds mature on a specific date in the future and the bond face value must be repaid to the bondholder on that date. Uint256 timestamp of the future date
+    * @param _cap Cap - Number of bonds that can be minted
+    * @param _timesToRedeem Times to redeem the coupon within the term
     * @param _loopLimit (To limit the for cycle when issuing the bonds)
      */
     function germinate
@@ -61,7 +61,7 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
         uint256 _cap,
         uint256 _timesToRedeem,
         uint256 _loopLimit,
-        address _spatialRegistry,
+        address _spatialRegistry
        // address _oracle
     )
         external override returns (address sprout) {
@@ -80,7 +80,7 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
         // Greenhouse as current sprout admin initializes proxy with logic and right admin
         IProxy(sprout).initialize(IGreenhouseController(controller).getLogicForSprout(), IGreenhouseController(controller).getCurrentAdmin(), "");
         // Greehouse initialized sprout with variables
-        require(ISprout(sprout).initialize(address(this), _name, _par, _parDecimals, _coupon, _term, _cap, _timesToRedeem, _loopLimit, _spatialRegistry) == true, "Greenhouse: Sprout initialize not succeed.");
+        require(ISprout(sprout).initialize(address(this), _name, _par, _parDecimals, _coupon, _term, _cap, _timesToRedeem, _loopLimit, _spatialRegistry) == true, "Greenhouse: Sprout initialize did not succeed.");
         
         sprouts.push(sprout);
         emit SproutCreated(sprout);

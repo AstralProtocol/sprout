@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: GPL
+// SPDX-License-Identifier: APACHE OR MIT
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import './interfaces/IWSImplementation.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import './interfaces/IGreenhouseImplementation.sol';
 import "./interfaces/ISprout.sol";
 
-contract Sprout is ISprouts, IWSImplementation {
+contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
     using SafeMath for uint256;
 
     // Proxy storage and control
@@ -16,8 +17,6 @@ contract Sprout is ISprouts, IWSImplementation {
 
     // Bond storage
     string name;
-    uint256 totalDebt; // running tally of total owed to investors?
-    uint256 totalOwed; // by the borrower to service the bond each interval -> coupons + variable payment.
     uint256 parDecimals;
     uint256 bondsNumber;
     uint256 cap;
@@ -30,6 +29,9 @@ contract Sprout is ISprouts, IWSImplementation {
     uint256 couponThreshold = 0;
     address oracle;
     uint256 intervalCount = 0;
+    uint256 totalDebt; // running tally of total owed to investors
+    uint256 totalOwed; // by the borrower to service the bond each interval -> coupons + variable payment.
+
 
     mapping(uint256 => address) bonds;
     mapping(uint256 => uint256) maturities;
@@ -39,9 +41,8 @@ contract Sprout is ISprouts, IWSImplementation {
     uint256[] noxHistory;
 
     // Events
-    event TotalOwedUpdated(uint256 totalOwed);
 
-    // Modifiers
+    // Mutex to prevent re-entrancy
     modifier lock() {
         require(unlocked == 1, 'Sprout: LOCKED');
         unlocked = 0;
@@ -55,13 +56,13 @@ contract Sprout is ISprouts, IWSImplementation {
 
 
     /**
-    * @dev  Logic contract that proxies point to
-    * @param _par Par value
+    * @dev  Initializer function (substitutes constructor)
+    * @param _par Par value - the face value of a bond
     * @param _parDecimals Par decimals
-    * @param _coupon Coupon
-    * @param _term Term
-    * @param _cap Cap
-    * @param _timesToRedeem Times to redeem
+    * @param _coupon Coupon = yield paid by a fixed-income security
+    * @param _term Term - bonds mature on a specific date in the future and the bond face value must be repaid to the bondholder on that date. Uint256 timestamp of the future date
+    * @param _cap Cap - Number of bonds that can be minted
+    * @param _timesToRedeem Times to redeem the coupon within the term
     * @param _loopLimit (To limit the for cycle when issuing the bonds)
      */
     function initialize(    
@@ -74,7 +75,7 @@ contract Sprout is ISprouts, IWSImplementation {
         uint256 _cap,
         uint256 _timesToRedeem,
         uint256 _loopLimit,
-        address _spatialRegistry,
+        address _spatialRegistry
         // address _oracle
         )  override external returns(bool) {
         require(initialized == false, 'Sprout: FORBIDDEN');
@@ -105,23 +106,32 @@ contract Sprout is ISprouts, IWSImplementation {
      * @param _loopLimit The new loop limit
      */
 
-    function changeLoopLimit(uint256 _loopLimit) external override lock {
+    function changeLoopLimit(uint256 _loopLimit) external lock onlyOwner {
         require(_loopLimit > 0, "Loop limit lower than or equal to 0");
 
         loopLimit = _loopLimit;
     }
 
     /**
-     * @notice Issues bonds to a new buyer
+     * @dev Issues bonds to a new buyer
+     * @notice Should only be called by the bonds issuer
      * @param buyer The buyer of the bonds
      * @param _bondsAmount How many bonds to mint
      */
     // Add payable function ()
     function issueBond(address buyer, uint256 _bondsAmount)
         external
-        override
+        payable
         lock
+        onlyOwner
     {
+        uint256 totalDebtPreDeposit = totalDebt.add(parValue.mul(_bondsAmount)).add(
+            (parValue.mul(couponRate).div(100)).mul(
+                timesToRedeem.mul(_bondsAmount)
+            )
+        );
+
+        require(totalDebtPreDeposit == msg.value, "Total value deposited is not equal to the total debt when all bonds mature");
         require(buyer != address(0), "Buyer can't be address null");
         require(
             _bondsAmount > 0,
@@ -145,31 +155,30 @@ contract Sprout is ISprouts, IWSImplementation {
 
         for (uint256 i = 0; i < _bondsAmount; i++) {
             // WARNING: we should consider switching 'now' for the 'block.number', this is insecure - João
-            maturities[nonce.sub(i)] = now.add(term);
-            bonds[nonce.sub(i)] = buyer;
-            couponsRedeemed[nonce.sub(i)] = 0;
+            uint256 currentNonce = nonce.sub(i);
+
+            maturities[currentNonce] = now.add(term);
+            bonds[currentNonce] = buyer;
+            couponsRedeemed[currentNonce] = 0;
             bondsAmount[buyer] = bondsAmount[buyer].add(_bondsAmount);
         }
 
-        totalDebt = totalDebt.add(parValue.mul(_bondsAmount)).add(
-            (parValue.mul(couponRate).div(100)).mul(
-                timesToRedeem.mul(_bondsAmount)
-            )
-        );
+        // Total face value + the amount of the coupons that needs to be paid in each time
+        totalDebt = totalDebtPreDeposit;
 
         emit BondsIssued(buyer, _bondsAmount);
     }
 
     /**
-     * @notice Redeem coupons on your bonds
+     * @dev Redeem coupons on your bonds.
+     * @notice Anyone should be able to call this function.
      * @param _bonds An array of bond ids corresponding to the bonds you want to redeem apon
      */
-    // maybe add onlyOwner and automate off-chain
-    function redeemCoupons(uint256[] memory _bonds) external override lock {
+    function redeemCoupons(uint256[] memory _bonds) external lock {
         require(_bonds.length > 0, "Array of bonds must not be empty");
         require(
             _bonds.length <= loopLimit,
-            "Array of bonds must have a number of bonds lower than the looop limit"
+            "Array of bonds must have a number of bonds lower than the loop limit"
         );
         require(
             _bonds.length <= getBalance(msg.sender),
@@ -220,24 +229,27 @@ contract Sprout is ISprouts, IWSImplementation {
 
                 getMoney(parValue.div((10**parDecimals)), msg.sender);
             }
+            emit RedeemedCoupons(msg.sender, _bonds[i]);
         }
-
-        emit RedeemedCoupons(msg.sender, _bonds);
     }
 
     /**
-     * @notice Transfer bonds to another address
+     * @dev Transfer bonds to another address
+     * @notice Anyone should be able to call this function.
      * @param receiver The receiver of the bonds
      * @param _bonds The ids of the bonds that you want to transfer
      */
 
     function transfer(address receiver, uint256[] memory _bonds)
         external
-        override
         lock
     {
         require(_bonds.length > 0, "Array of bonds must not be empty");
         require(receiver != address(0), "Receiver can't be address null");
+        require(
+            _bonds.length <= loopLimit,
+            "Array of bonds must have a number of bonds lower than the loop limit"
+        );
         require(
             _bonds.length <= getBalance(msg.sender),
             "Array of bonds must have a number of bonds lower than the balance of the bonds of the sender"
@@ -252,9 +264,10 @@ contract Sprout is ISprouts, IWSImplementation {
             bonds[_bonds[i]] = receiver;
             bondsAmount[msg.sender] = bondsAmount[msg.sender].sub(1);
             bondsAmount[receiver] = bondsAmount[receiver].add(1);
+
+            emit BondTransferred(msg.sender, receiver, _bonds[i]);
         }
 
-        emit Transferred(msg.sender, receiver, _bonds);
     }
 
     modifier onlyOracle() {
@@ -263,12 +276,11 @@ contract Sprout is ISprouts, IWSImplementation {
     }
 
     /**
-     * @notice Update the total debt the borrower must pay to service the bond each interval
+     * @dev Update the total debt the borrower must pay to service the bond each interval
      * @param noxMeasurement The amount in wei the borrower has to pay. Calculated by the oracle
-     *      from the DEFRA NOx data of London
      */
-
-    function updateTotalOwed(uint256 noxMeasurement) external lock { // called every 1 year by an off-chain oracle EOA
+    function updateTotalOwed(uint256 noxMeasurement) external lock onlyOracle { 
+        // called every x times by an off-chain oracle EOA
         // example noxMeasurement: 44410000000000000000 i.e. 44.41 ether in wei. i.e. 44.41 * 10e18
 
         // Check to make sure that oracle update is due?
@@ -284,38 +296,19 @@ contract Sprout is ISprouts, IWSImplementation {
         emit TotalOwedUpdated(totalOwed);
 
     }
+    
+    //INTERNAL FUNCTIONS
 
-    function payTotalDebt() external payable lock {
-        require(msg.value < totalDebt, "Transaction amount is higher than total owed");
-        // add requirement that msg.value is == totalDebt
-        totalDebt -= msg.value;
-    }
 
     /**
-     * @notice Donate money to this contract
-     */
-
-//    function donate() public override payable {
-//        require(address(token) == address(0));
-//    }
-
-    receive() external payable {}
-
-    fallback() external payable {}
-
-    /**
-     * @notice Transfer coupon money to an address
+     * @dev Transfer coupon money to an address
      * @param amount The amount of money to be transferred
      * @param receiver The address which will receive the money
      */
 
     function getMoney(uint256 amount, address payable receiver) private {
-//        if (address(token) == address(0))
-//            receiver.transfer(amount);
-//        else
-//            ERC20(token).transfer(msg.sender, amount);
         receiver.transfer(amount);
-        totalDebt = totalDebt.sub(amount); // ?
+        totalDebt = totalDebt.sub(amount);
     }
 
     //GETTERS
@@ -327,7 +320,6 @@ contract Sprout is ISprouts, IWSImplementation {
 
     function getLastTimeRedeemed(uint256 bond)
         public
-        override
         view
         returns (uint256)
     {
@@ -345,7 +337,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @param bond The bond id to analyze
      */
 
-    function getBondOwner(uint256 bond) public override view returns (address) {
+    function getBondOwner(uint256 bond) public view returns (address) {
         return bonds[bond];
     }
 
@@ -356,7 +348,6 @@ contract Sprout is ISprouts, IWSImplementation {
 
     function getRemainingCoupons(uint256 bond)
         public
-        override
         view
         returns (int256)
     {
@@ -376,7 +367,6 @@ contract Sprout is ISprouts, IWSImplementation {
 
     function getCouponsRedeemed(uint256 bond)
         public
-        override
         view
         returns (uint256)
     {
@@ -395,7 +385,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get how many times coupons can be redeemed for bonds
      */
 
-    function getTimesToRedeem() public override view returns (uint256) {
+    function getTimesToRedeem() public view returns (uint256) {
         return timesToRedeem;
     }
 
@@ -403,7 +393,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get how much time it takes for a bond to mature
      */
 
-    function getTerm() public override view returns (uint256) {
+    function getTerm() public view returns (uint256) {
         return term;
     }
 
@@ -412,7 +402,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @param bond The bond id to analyze
      */
 
-    function getMaturity(uint256 bond) public override view returns (uint256) {
+    function getMaturity(uint256 bond) public view returns (uint256) {
         return maturities[bond];
     }
 
@@ -420,7 +410,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get how much money is redeemed on a coupon
      */
 
-    function getSimpleInterest() public override view returns (uint256) {
+    function getSimpleInterest() public view returns (uint256) {
         uint256 rate = getCouponRate();
 
         uint256 par = getParValue();
@@ -432,7 +422,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the yield of a bond
      */
 
-    function getCouponRate() public override view returns (uint256) {
+    function getCouponRate() public view returns (uint256) {
         return couponRate;
     }
 
@@ -440,7 +430,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the par value for these bonds
      */
 
-    function getParValue() public override view returns (uint256) {
+    function getParValue() public view returns (uint256) {
         return parValue;
     }
 
@@ -448,7 +438,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the cap amount for these bonds
      */
 
-    function getCap() public override view returns (uint256) {
+    function getCap() public view returns (uint256) {
         return cap;
     }
 
@@ -457,7 +447,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @param who The address to analyze
      */
 
-    function getBalance(address who) public override view returns (uint256) {
+    function getBalance(address who) public view returns (uint256) {
         return bondsAmount[who];
     }
 
@@ -465,7 +455,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev If the par value is a real number, it might have decimals. Get the amount of decimals the par value has
      */
 
-    function getParDecimals() public override view returns (uint256) {
+    function getParDecimals() public view returns (uint256) {
         return parDecimals;
     }
 
@@ -473,7 +463,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the name of this smart bond contract
      */
 
-    function getName() public override view returns (string memory) {
+    function getName() public view returns (string memory) {
         return name;
     }
 
@@ -481,7 +471,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the current unpaid debt
      */
 
-    function getTotalDebt() public override view returns (uint256) {
+    function getTotalDebt() public view returns (uint256) {
         return totalDebt;
     }
 
@@ -489,7 +479,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get total debt owed by borrower
      */
     
-    function getTotalOwed() public override view returns (uint256) {
+    function getTotalOwed() public view returns (uint256) {
         return totalOwed;
     }
 
@@ -497,7 +487,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the total amount of bonds issued
      */
 
-    function getTotalBonds() public override view returns (uint256) {
+    function getTotalBonds() public view returns (uint256) {
         return bondsNumber;
     }
 
@@ -505,7 +495,7 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the latest nonce
      */
 
-    function getNonce() public override view returns (uint256) {
+    function getNonce() public view returns (uint256) {
         return nonce;
     }
 
@@ -513,11 +503,11 @@ contract Sprout is ISprouts, IWSImplementation {
      * @dev Get the amount of time that needs to pass between the dates when you can redeem coupons
      */
 
-    function getCouponThreshold() public override view returns (uint256) {
+    function getCouponThreshold() public view returns (uint256) {
         return couponThreshold;
     }
 
-    function getImplementationType() external pure override returns(uint256) {
+    function getImplementationType() external pure returns(uint256) {
         /// 2 is a sprout type
         return 2;
     }

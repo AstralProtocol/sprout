@@ -5,22 +5,34 @@ interface ISprouts {
 
   event BondsIssued(address buyer, uint256 bondsAmount);
 
-  event RedeemedCoupons(address indexed caller, uint256[] bonds);
+  event BondTransferred(address indexed from, address indexed to, uint indexed bondId);
+  
+  event RedeemedCoupons(address indexed caller, uint256 indexed bondId);
 
   event ClaimedPar(address indexed caller, uint256 amountClaimed);
 
-  event Transferred(address indexed from, address indexed to, uint256[] bonds);
+  event TotalOwedUpdated(uint256 totalOwed);
 
+  function initialize(        
+    address _factory,    
+    string memory _name,
+    uint256 _par,
+    uint256 _parDecimals,
+    uint256 _coupon,
+    uint256 _term,
+    uint256 _cap,
+    uint256 _timesToRedeem,
+    uint256 _loopLimit,
+    address _spatialRegistry
+  ) external returns(bool);
 
   function changeLoopLimit(uint256 _loopLimit) external;
 
-  function issueBond(address buyer, uint256 bondsAmount) external;
+  function issueBond(address buyer, uint256 bondsAmount) external payable;
 
   function redeemCoupons(uint256[] memory _bonds ) external;
 
   function transfer(address receiver, uint256[] memory bonds) external;
-
-//  function donate() external payable;
 
 
   //GETTERS

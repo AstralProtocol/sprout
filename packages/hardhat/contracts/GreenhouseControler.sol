@@ -1,12 +1,10 @@
-  
-// SPDX-License-Identifier: GPL-3.0-or-later
-
+// SPDX-License-Identifier: APACHE OR MIT
 pragma solidity ^0.6.12;
 
 import "./interfaces/IProxy.sol";
 import "./interfaces/IGreenhouseController.sol";
 import "./interfaces/IGreenhouseImplementation.sol";
-import "./Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract GreenhouseController is Ownable, IGreenhouseController {
     address public sproutLogic;
