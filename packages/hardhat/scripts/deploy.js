@@ -4,6 +4,7 @@ const chalk = require("chalk");
 const { config, ethers } = require("hardhat");
 const { utils } = require("ethers");
 const R = require("ramda");
+const { green } = require("chalk");
 
 const main = async () => {
   // ? Tip: if on VSCode, install "Better Comments" extension
@@ -17,10 +18,32 @@ const main = async () => {
   // ! OR CUSTOM DEPLOY
   // * ----------------
   // custom deploy (to use deployed addresses dynamically for example:)
+
+  const accounts = await ethers.getSigners();
+
+  const wallet = ethers.Wallet.fromMnemonic(fs.readFileSync("./mnemonic.txt").toString().trim())
+
+  console.log(`Admin account: ${accounts[0].address}`)
+
+  // Logic
   const greenhouseLogic = await deploy("Greenhouse")
+  console.log(`Greenhouse logic: ${greenhouseLogic.address}`)
   const sproutLogic = await deploy("Sprout")
+  console.log(`Sprout logic: ${sproutLogic.address}`)
+
+  // Controller
   const greenhouseController = await deploy("GreenhouseController", [sproutLogic.address])
-  const greenhouseProxy = await deploy("GreenhouseProxy", WSProxyFactory, [], {...overrides, gasLimit: 600000}) // used 582,041
+  console.log(`Greenhouse Controller logic: ${greenhouseController.address}`)
+  
+  // Proxy Greenhouse Factory
+  const greenhouseProxy = await deploy("GreenhouseProxy") // used 582,041
+  await greenhouseProxy.initialize(greenhouseLogic.address, accounts[0].address, []) // used 50,540
+
+  // Greenhouse Factory
+  const greenhouse = new ethers.Contract(greenhouseProxy.address, greenhouseLogic.interface, wallet)
+  await greenhouse.initialize(greenhouseController.address)
+
+  console.log(`Greenhouse (sprouts factory): ${greenhouseProxy.address}`)
 
   // const examplePriceOracle = await deploy("ExamplePriceOracle")
   // const smartContractWallet = await deploy("SmartContractWallet",[exampleToken.address,examplePriceOracle.address])

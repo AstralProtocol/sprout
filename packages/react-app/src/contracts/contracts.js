@@ -1,1 +1,1 @@
-module.exports = ["Germination"];
+module.exports = ["Greenhouse","Sprout"];
