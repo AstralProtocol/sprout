@@ -50,7 +50,7 @@ contract GreenhouseController is Ownable, IGreenhouseController {
     }
 
     function getLogicForSprout() external view override returns(address) {
-        return sproutLOgic;
+        return sproutLogic;
     }
 
     function getCurrentAdmin() external view override returns(address){

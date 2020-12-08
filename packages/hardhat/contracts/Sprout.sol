@@ -6,12 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import './interfaces/IGreenhouseImplementation.sol';
 import "./interfaces/ISprout.sol";
 
-contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
+contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
     using SafeMath for uint256;
 
     // Proxy storage and control
-    address public override spatialRegistry;
-    address public override factory;
+    address public spatialRegistry;
+    address public factory;
     bool private initialized;
     uint private unlocked;
 
@@ -50,7 +50,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
         unlocked = 1;
     }
 
-    function isLocked() external view override returns (uint){
+    function isLocked() external view returns (uint){
         return unlocked;
     }
 
@@ -96,7 +96,6 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
 
         initialized = true;
         unlocked = 1;
-        super.initialize();
         return true;
     }
 
@@ -106,7 +105,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @param _loopLimit The new loop limit
      */
 
-    function changeLoopLimit(uint256 _loopLimit) external lock onlyOwner {
+    function changeLoopLimit(uint256 _loopLimit) external override lock onlyOwner {
         require(_loopLimit > 0, "Loop limit lower than or equal to 0");
 
         loopLimit = _loopLimit;
@@ -121,6 +120,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
     // Add payable function ()
     function issueBond(address buyer, uint256 _bondsAmount)
         external
+        override
         payable
         lock
         onlyOwner
@@ -174,7 +174,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @notice Anyone should be able to call this function.
      * @param _bonds An array of bond ids corresponding to the bonds you want to redeem apon
      */
-    function redeemCoupons(uint256[] memory _bonds) external lock {
+    function redeemCoupons(uint256[] memory _bonds) external override lock {
         require(_bonds.length > 0, "Array of bonds must not be empty");
         require(
             _bonds.length <= loopLimit,
@@ -242,6 +242,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
 
     function transfer(address receiver, uint256[] memory _bonds)
         external
+        override
         lock
     {
         require(_bonds.length > 0, "Array of bonds must not be empty");
@@ -320,6 +321,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
 
     function getLastTimeRedeemed(uint256 bond)
         public
+        override
         view
         returns (uint256)
     {
@@ -337,7 +339,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @param bond The bond id to analyze
      */
 
-    function getBondOwner(uint256 bond) public view returns (address) {
+    function getBondOwner(uint256 bond) public override view returns (address) {
         return bonds[bond];
     }
 
@@ -348,6 +350,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
 
     function getRemainingCoupons(uint256 bond)
         public
+        override
         view
         returns (int256)
     {
@@ -367,6 +370,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
 
     function getCouponsRedeemed(uint256 bond)
         public
+        override
         view
         returns (uint256)
     {
@@ -385,7 +389,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get how many times coupons can be redeemed for bonds
      */
 
-    function getTimesToRedeem() public view returns (uint256) {
+    function getTimesToRedeem() public override view returns (uint256) {
         return timesToRedeem;
     }
 
@@ -393,7 +397,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get how much time it takes for a bond to mature
      */
 
-    function getTerm() public view returns (uint256) {
+    function getTerm() public override view returns (uint256) {
         return term;
     }
 
@@ -402,7 +406,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @param bond The bond id to analyze
      */
 
-    function getMaturity(uint256 bond) public view returns (uint256) {
+    function getMaturity(uint256 bond) public override view returns (uint256) {
         return maturities[bond];
     }
 
@@ -410,7 +414,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get how much money is redeemed on a coupon
      */
 
-    function getSimpleInterest() public view returns (uint256) {
+    function getSimpleInterest() public override view returns (uint256) {
         uint256 rate = getCouponRate();
 
         uint256 par = getParValue();
@@ -422,7 +426,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the yield of a bond
      */
 
-    function getCouponRate() public view returns (uint256) {
+    function getCouponRate() public override view returns (uint256) {
         return couponRate;
     }
 
@@ -430,7 +434,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the par value for these bonds
      */
 
-    function getParValue() public view returns (uint256) {
+    function getParValue() public override view returns (uint256) {
         return parValue;
     }
 
@@ -438,7 +442,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the cap amount for these bonds
      */
 
-    function getCap() public view returns (uint256) {
+    function getCap() public override view returns (uint256) {
         return cap;
     }
 
@@ -447,7 +451,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @param who The address to analyze
      */
 
-    function getBalance(address who) public view returns (uint256) {
+    function getBalance(address who) public override view returns (uint256) {
         return bondsAmount[who];
     }
 
@@ -455,7 +459,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev If the par value is a real number, it might have decimals. Get the amount of decimals the par value has
      */
 
-    function getParDecimals() public view returns (uint256) {
+    function getParDecimals() public override view returns (uint256) {
         return parDecimals;
     }
 
@@ -463,7 +467,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the name of this smart bond contract
      */
 
-    function getName() public view returns (string memory) {
+    function getName() public override view returns (string memory) {
         return name;
     }
 
@@ -471,7 +475,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the current unpaid debt
      */
 
-    function getTotalDebt() public view returns (uint256) {
+    function getTotalDebt() public override view returns (uint256) {
         return totalDebt;
     }
 
@@ -479,7 +483,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get total debt owed by borrower
      */
     
-    function getTotalOwed() public view returns (uint256) {
+    function getTotalOwed() public override view returns (uint256) {
         return totalOwed;
     }
 
@@ -487,7 +491,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the total amount of bonds issued
      */
 
-    function getTotalBonds() public view returns (uint256) {
+    function getTotalBonds() public override view returns (uint256) {
         return bondsNumber;
     }
 
@@ -495,7 +499,7 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the latest nonce
      */
 
-    function getNonce() public view returns (uint256) {
+    function getNonce() public override view returns (uint256) {
         return nonce;
     }
 
@@ -503,11 +507,11 @@ contract Sprout is ISprouts, IGreenhouseImplementation, Ownable {
      * @dev Get the amount of time that needs to pass between the dates when you can redeem coupons
      */
 
-    function getCouponThreshold() public view returns (uint256) {
+    function getCouponThreshold() public override view returns (uint256) {
         return couponThreshold;
     }
 
-    function getImplementationType() external pure returns(uint256) {
+    function getImplementationType() external override pure returns(uint256) {
         /// 2 is a sprout type
         return 2;
     }
