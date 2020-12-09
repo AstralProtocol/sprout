@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import './interfaces/IGreenhouseImplementation.sol';
 import "./interfaces/ISprout.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
+contract Sprout is ISprout, IGreenhouseImplementation, AccessControl {
     using SafeMath for uint256;
 
     // Proxy storage and control
@@ -14,6 +14,8 @@ contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
     address public factory;
     bool private initialized;
     uint private unlocked;
+
+    bytes32 public constant BOND_ISSUER = keccak256("BOND_ISSUER");
 
     // Bond storage
     string name;
@@ -94,18 +96,29 @@ contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
         couponThreshold = term.div(timesToRedeem);
         // oracle = _oracle;
 
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(BOND_ISSUER, _msgSender());
+
         initialized = true;
         unlocked = 1;
         return true;
     }
 
+    /**
+     * @dev Registers a new user with the ability to register a spatial asset.
+     */
+    function registerBondIssuerRole() external override lock {
+        require(!hasRole(BOND_ISSUER, _msgSender()), "Sprout: must not have a BOND_ISSUER role yet");
+        _setupRole(BOND_ISSUER, _msgSender());
+    }
 
     /**
      * @notice Change the number of elements you can loop through in this contract
      * @param _loopLimit The new loop limit
      */
 
-    function changeLoopLimit(uint256 _loopLimit) external override lock onlyOwner {
+    function changeLoopLimit(uint256 _loopLimit) external override lock {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Sprout: must have DEFAULT_ADMIN_ROLE role");
         require(_loopLimit > 0, "Loop limit lower than or equal to 0");
 
         loopLimit = _loopLimit;
@@ -123,8 +136,8 @@ contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
         override
         payable
         lock
-        onlyOwner
     {
+        require(hasRole(BOND_ISSUER, _msgSender()), "Sprout: must have BOND_ISSUER role");
         uint256 totalDebtPreDeposit = totalDebt.add(parValue.mul(_bondsAmount)).add(
             (parValue.mul(couponRate).div(100)).mul(
                 timesToRedeem.mul(_bondsAmount)
@@ -394,6 +407,14 @@ contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
     }
 
     /**
+     * @dev Get how many times coupons can be redeemed for bonds
+     */
+
+    function getLoopLimit() public override view returns (uint256) {
+        return loopLimit;
+    }
+
+    /**
      * @dev Get how much time it takes for a bond to mature
      */
 
@@ -502,6 +523,8 @@ contract Sprout is ISprout, IGreenhouseImplementation, Ownable {
     function getNonce() public override view returns (uint256) {
         return nonce;
     }
+
+
 
     /**
      * @dev Get the amount of time that needs to pass between the dates when you can redeem coupons

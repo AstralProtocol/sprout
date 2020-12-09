@@ -86,8 +86,14 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
         emit SproutCreated(sprout);
     }
 
+    function issueBond(address sprout, address buyer, uint256 bondsAmount) external override payable {
+        ISprout(sprout).issueBond.value(msg.value)(buyer, bondsAmount);
+    }
+
+
     function getImplementationType() external pure override returns(uint256) {
         /// 1 is a factory type
         return 1;
     }
+    
 }

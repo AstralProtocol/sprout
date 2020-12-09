@@ -26,6 +26,8 @@ interface ISprout {
     address _spatialRegistry
   ) external returns(bool);
 
+  function registerBondIssuerRole() external;
+
   function changeLoopLimit(uint256 _loopLimit) external;
 
   function issueBond(address buyer, uint256 bondsAmount) external payable;
@@ -50,6 +52,8 @@ interface ISprout {
 //  function getTokenAddress() external view returns (address);
 
   function getTimesToRedeem() external view returns (uint256);
+
+  function getLoopLimit() external view returns (uint256);
 
   function getTerm() external view returns (uint256);
 
