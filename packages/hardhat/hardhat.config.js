@@ -1,6 +1,7 @@
 const { utils } = require("ethers");
 const fs = require("fs");
 
+require("solidity-coverage");
 require("@nomiclabs/hardhat-waffle");
 
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;

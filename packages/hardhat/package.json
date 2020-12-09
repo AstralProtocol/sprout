@@ -16,16 +16,19 @@
     "@openzeppelin/contracts": "^3.2.0",
     "chai": "^4.2.0",
     "chalk": "^4.1.0",
+    "coveralls": "^3.1.0",
     "ethereum-waffle": "^3.1.1",
     "ethers": "^5.0.17",
     "hardhat": "^2.0.2",
     "node-watch": "^0.7.0",
     "qrcode-terminal": "^0.12.0",
-    "ramda": "^0.27.1"
+    "ramda": "^0.27.1",
+    "solidity-coverage": "^0.7.13"
   },
   "scripts": {
     "chain": "hardhat node",
     "test": "hardhat test --network hardhat",
+    "coverage": "hardhat coverage --network hardhat",
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy.js && hardhat run scripts/publish.js",
     "watch": "node scripts/watch.js",
