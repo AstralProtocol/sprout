@@ -77,7 +77,8 @@ contract Sprout is ISprout, IGreenhouseImplementation, AccessControl {
         uint256 _cap,
         uint256 _timesToRedeem,
         uint256 _loopLimit,
-        address _spatialRegistry
+        address _spatialRegistry,
+        address _sproutAdmin
         // address _oracle
         )  override external returns(bool) {
         require(initialized == false, 'Sprout: FORBIDDEN');
@@ -96,8 +97,8 @@ contract Sprout is ISprout, IGreenhouseImplementation, AccessControl {
         couponThreshold = term.div(timesToRedeem);
         // oracle = _oracle;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(BOND_ISSUER, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _sproutAdmin);
+        _setupRole(BOND_ISSUER, _sproutAdmin);
 
         initialized = true;
         unlocked = 1;

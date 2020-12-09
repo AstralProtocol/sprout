@@ -18,5 +18,4 @@ interface IGreenhouse {
         address _spatialRegistry
         ) external returns (address pair);
 
-    function issueBond(address sprout, address buyer, uint256 bondsAmount) external payable;
 }

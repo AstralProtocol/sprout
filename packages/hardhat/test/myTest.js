@@ -131,8 +131,7 @@ describe("Sprout dApp", function () {
         // value: provider.getBalance(addr)
     };
       
-        console.log(totalDebt.toString())
-        const issueBondsTx = await greenhouse.issueBond(sprout1.address, buyer, bondsAmount, overrides);
+        const issueBondsTx = await sprout1.issueBond(buyer, bondsAmount, overrides);
         
         const receipt = await issueBondsTx.wait(1)
         const bondsIssuedEvent = receipt.events.pop()
@@ -142,6 +141,7 @@ describe("Sprout dApp", function () {
       
         expect(buyerAddress).to.equal(buyer);
         expect(bondsAmountInContract).to.equal(bondsAmount);
+        expect(await sprout1.getTotalDebt()).to.equal(totalDebt);
       });
     });
   });

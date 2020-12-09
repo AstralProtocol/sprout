@@ -23,7 +23,8 @@ interface ISprout {
     uint256 _cap,
     uint256 _timesToRedeem,
     uint256 _loopLimit,
-    address _spatialRegistry
+    address _spatialRegistry,
+    address _sproutAdmin
   ) external returns(bool);
 
   function registerBondIssuerRole() external;

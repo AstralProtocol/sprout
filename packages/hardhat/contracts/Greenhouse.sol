@@ -80,16 +80,11 @@ contract Greenhouse is IGreenhouse, IGreenhouseImplementation{
         // Greenhouse as current sprout admin initializes proxy with logic and right admin
         IProxy(sprout).initialize(IGreenhouseController(controller).getLogicForSprout(), IGreenhouseController(controller).getCurrentAdmin(), "");
         // Greehouse initialized sprout with variables
-        require(ISprout(sprout).initialize(address(this), _name, _par, _parDecimals, _coupon, _term, _cap, _timesToRedeem, _loopLimit, _spatialRegistry) == true, "Greenhouse: Sprout initialize did not succeed.");
+        require(ISprout(sprout).initialize(address(this), _name, _par, _parDecimals, _coupon, _term, _cap, _timesToRedeem, _loopLimit, _spatialRegistry, msg.sender) == true, "Greenhouse: Sprout initialize did not succeed.");
         
         sprouts.push(sprout);
         emit SproutCreated(sprout);
     }
-
-    function issueBond(address sprout, address buyer, uint256 bondsAmount) external override payable {
-        ISprout(sprout).issueBond.value(msg.value)(buyer, bondsAmount);
-    }
-
 
     function getImplementationType() external pure override returns(uint256) {
         /// 1 is a factory type
