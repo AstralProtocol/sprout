@@ -1,9 +1,0 @@
-dist: trusty
-language: node_js
-node_js:
-  - "14"
-install:
-  - npm install
-script:
-  - npx hardhat coverage --network hardhat
-  - cat coverage/lcov.info | coveralls
