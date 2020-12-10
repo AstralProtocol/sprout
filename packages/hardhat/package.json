@@ -27,8 +27,8 @@
   },
   "scripts": {
     "chain": "hardhat node",
-    "test": "hardhat test --network hardhat && cat coverage/lcov.info | coveralls",
-    "coverage": "hardhat coverage --network hardhat",
+    "test": "hardhat test --network hardhat",
+    "coverage": "hardhat coverage --network hardhat && rm -rf ../../coverage && rm -rf ../../coverage.json && mv coverage/ ./../../ && mv coverage.json ./../../",
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy.js && hardhat run scripts/publish.js",
     "watch": "node scripts/watch.js",

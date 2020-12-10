@@ -18,7 +18,7 @@
     "chain": "yarn workspace @scaffold-eth/hardhat chain",
     "node": "yarn workspace @scaffold-eth/hardhat chain",
     "test": "yarn workspace @scaffold-eth/hardhat test",
-    "coverage": "yarn workspace @scaffold-eth/hardhat coverage",
+    "coverage": "yarn workspace @scaffold-eth/hardhat coverage && cat coverage/lcov.info | coveralls",
     "start": "yarn workspace @scaffold-eth/react-app start",
     "compile": "yarn workspace @scaffold-eth/hardhat compile",
     "deploy": "yarn workspace @scaffold-eth/hardhat deploy",

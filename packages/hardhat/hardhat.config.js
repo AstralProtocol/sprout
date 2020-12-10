@@ -44,6 +44,9 @@ module.exports = {
       accounts: {
         mnemonic: mnemonic(),
       },
+      gas: 12000000,
+      blockGasLimit: 0x1fffffffffffff,
+      allowUnlimitedContractSize: true,
     },
     localhost: {
       url: "http://localhost:8545",
