@@ -155,8 +155,9 @@ task("fundedwallet", "Create a wallet (pk) link and fund it with deployer?")
 
 });
 
-
-task("generate", "Create a mnemonic for builder deploys", async (_, { ethers }) => {
+task("generate", "Create a mnemonic for builder deploys")
+.addOptionalParam("test", "To make a test")
+.setAction(async (taskArgs, { ethers }) => {
   const bip39 = require("bip39")
   const hdkey = require('ethereumjs-wallet/hdkey');
   const mnemonic = bip39.generateMnemonic()
@@ -176,9 +177,8 @@ task("generate", "Create a mnemonic for builder deploys", async (_, { ethers }) 
   console.log("🔐 Account Generated as " + address + " and set as mnemonic in packages/hardhat")
   console.log("💬 Use 'yarn run account' to get more information about the deployment account.")
 
-  fs.writeFileSync("./" + address + ".txt", mnemonic.toString())
-  fs.writeFileSync("./mnemonic.txt", mnemonic.toString())
-});
+  taskArgs.test ? fs.writeFileSync("./mnemonicCoverage.txt", mnemonic.toString()) :  fs.writeFileSync("./mnemonic.txt", mnemonic.toString())
+}); 
 
 task("account", "Get balance informations for the deployment account.", async (_, { ethers }) => {
   const hdkey = require('ethereumjs-wallet/hdkey');
