@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/astralDAO/sprout.svg?branch=main)](https://travis-ci.org/astralDAO/sprout) [![Coverage Status](https://coveralls.io/repos/github/astralDAO/sprout/badge.svg?branch=main)](https://coveralls.io/github/astralDAO/sprout?branch=main)
+[![Build Status][![Build Status](https://travis-ci.com/astralDAO/sprout.svg?branch=main)](https://travis-ci.com/astralDAO/sprout) [![Coverage Status](https://coveralls.io/repos/github/astralDAO/sprout/badge.svg?branch=main)](https://coveralls.io/github/astralDAO/sprout?branch=main)
 # 🌱 Sprout - Sustainability-Linked Green Bond on Ethereum
 
 ### How to start
