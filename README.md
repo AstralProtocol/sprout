@@ -1,9 +1,10 @@
-[![Build Status](https://travis-ci.com/astralDAO/sprout.svg?branch=main)](https://travis-ci.com/astralDAO/sprout)
-[![Coverage Status](https://coveralls.io/repos/github/astralDAO/sprout/badge.svg?branch=main)](https://coveralls.io/github/astralDAO/sprout?branch=main)
+[![Build Status](https://www.travis-ci.com/AstralProtocol/sprout.svg?branch=main)](https://www.travis-ci.com/AstralProtocol/sprout)
+[![Coverage Status](https://coveralls.io/repos/github/astralprotocol/sprout/badge.svg?branch=main)](https://coveralls.io/github/astralprotocol/sprout?branch=main)
 
 # 🌱 Sprout - Sustainability-Linked Green Bond on Ethereum
 
 ### How to start
+
 1. Run `yarn chain` in one terminal
 2. Run `yarn deploy` in another terminal to deploy the contracts
 3. Run `yarn start` to load the react app
@@ -21,6 +22,7 @@ How to deploy locally to ganache (be sure to have ganache-cli installed globally
 ### Starting powergate
 
 Prerequisites:
+
 - Docker Desktop and Docker Compose
 - Golang
 
@@ -43,7 +45,6 @@ To install the CLI:
 
 - `make build-pow`
 - Check the instalation with `pow --help`
-
 
 ### Description
 
