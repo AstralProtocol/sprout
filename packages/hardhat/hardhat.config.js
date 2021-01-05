@@ -20,6 +20,8 @@ const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 //
 const defaultNetwork = "localhost";
 
+
+
 function mnemonic() {
   try {
     return fs.readFileSync("./mnemonic.txt").toString().trim();
