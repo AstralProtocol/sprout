@@ -1,5 +1,5 @@
 [![Build Status](https://www.travis-ci.com/AstralProtocol/sprout.svg?branch=main)](https://www.travis-ci.com/AstralProtocol/sprout)
-[![Coverage Status](https://coveralls.io/repos/github/astralprotocol/sprout/badge.svg?branch=main)](https://coveralls.io/github/astralprotocol/sprout?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/AstralProtocol/sprout/badge.svg?branch=main)](https://coveralls.io/github/AstralProtocol/sprout?branch=main)
 
 # 🌱 Sprout - Sustainability-Linked Green Bond on Ethereum
 
